@@ -1,76 +1,52 @@
-//Searches a path for duplicate files
-use clap::Parser;
-
-#[derive(Parser)]
-//add extended help
-#[clap(
-    version = "1.0",
-    author = "Noah Gift",
-    about = "Finds duplicate files",
-    after_help = "Example: rdedupe search --path . --pattern .txt"
-)]
-struct Cli {
-    #[clap(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Parser)]
-enum Commands {
-    Search {
-        #[clap(long, default_value = ".")]
-        path: String,
-        #[clap(long, default_value = "")]
-        pattern: String,
-    },
-    Dedupe {
-        #[clap(long, default_value = ".")]
-        path: String,
-        #[clap(long, default_value = "")]
-        pattern: String,
-    },
-    //create count with path and pattern defaults for both
-    Count {
-        #[clap(long, default_value = ".")]
-        path: String,
-        #[clap(long, default_value = "")]
-        pattern: String,
-    },
-}
-
 fn main() {
-    let cli = Cli::parse();
-    match cli.command {
-        Some(Commands::Search { path, pattern }) => {
-            println!("Searching for files in {} matching {}", path, pattern);
-            let files = rdedupe::walk(&path).unwrap();
-            let files = rdedupe::find(files, &pattern);
-            //print count of files matching pattern
-            println!("Found {} files matching {}", files.len(), pattern);
-            //print files
-            for file in files {
-                println!("{}", file);
-            }
-        }
-        Some(Commands::Dedupe { path, pattern }) => {
-            //dedupe files matching a pattern
-            //display the progress bar using indicatif
-            println!("Deduping files in {} matching {}", path, pattern);
-            let result = rdedupe::run(&path, &pattern);
-            match result {
-                Ok(_) => println!("Deduping complete"),
-                Err(e) => println!("Error: {}", e),
-            }
-        }
-        Some(Commands::Count { path, pattern }) => {
-            //count files matching a pattern
-            println!("Counting files in {} matching {}", path, pattern);
-            let files = rdedupe::walk(&path).unwrap();
-            let files = rdedupe::find(files, &pattern);
-            println!("Found {} files matching {}", files.len(), pattern);
+    let mut grades = Vec::new();
+    let mut credit_hours = Vec::new();
+
+    // Get grades and credit from user
+    for i in 1.. {
+        println!("Enter grade for class {} (or 'q' to quit)", i);
+        let mut grade = String::new();
+        std::io::stdin().read_line(&mut grade).unwrap();
+        grade = grade.trim().to_uppercase();
+
+        if grade == "Q" {
+            break;
         }
 
-        None => {
-            println!("No command given");
-        }
+        let grade = match grade.as_str() {
+            "A+" => 4.0,"A" => 4.0,"A-" => 3.7,
+            "B+" => 3.3,"B" => 3.0,"B-" => 2.7,
+            "C+" => 2.3,"C" => 2.0,"C-" => 1.7,
+            "F" => 0.0,"NC"=>0.0,
+            _ => {
+                println!("Invalid grade, try again");
+                continue;
+            }
+        };
+
+        println!("Enter credit for this course {}:", i);
+        let mut credit_hour = String::new();
+        std::io::stdin().read_line(&mut credit_hour).unwrap();
+        let credit_hour: f32 = match credit_hour.trim().parse() {
+            Ok(num) => num,
+            Err(_) => {
+                println!("Invalid credit, try again");
+                continue;
+            }
+        };
+
+        grades.push(grade);
+        credit_hours.push(credit_hour);
     }
+
+    // Calculate GPA
+    let mut total_quality_points = 0.0;
+    let mut total_credit_hours = 0.0;
+    for i in 0..grades.len() {
+        total_quality_points += grades[i] * credit_hours[i];
+        total_credit_hours += credit_hours[i];
+    }
+
+    let gpa = total_quality_points / total_credit_hours;
+    println!("GPA: {:.2}", gpa);
 }
