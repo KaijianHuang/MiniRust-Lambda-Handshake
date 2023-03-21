@@ -1,18 +1,20 @@
-use rand::seq::SliceRandom;
+
+use std::io;
 
 fn main() {
-    let cookie_messages = vec![
-        "You will have a great day today!",
-        "Good news is coming your way!",
-        "You will soon receive a promotion!",
-        "The stars will align in your favor!",
-        "You will find true love soon!",
-        "Your creativity will blossom!",
-        "You will receive unexpected blessings!",
-        "Your hard work will pay off!",
-    ];
+    // Prompt the user to enter a range
+    println!("Enter a range of numbers:");
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Failed to read line");
+    
+    // Parse the input range
+    let range: Vec<&str> = input.trim().split('-').collect();
+    let start = range[0].parse::<i32>().unwrap();
+    let end = range[1].parse::<i32>().unwrap();
 
-    let mut rng = rand::thread_rng();
-    let message = cookie_messages.choose(&mut rng).unwrap();
-    println!("Lucky cookie message: {}", message);
+    // Generate a random lucky number within the range
+    let lucky_number = rand::thread_rng().gen_range(start, end);
+    
+    // Print the lucky number
+    println!("Your lucky number is {}", lucky_number);
 }
