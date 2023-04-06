@@ -1,15 +1,43 @@
-use std::io;
+use lambda_runtime::{run, service_fn, Error, LambdaEvent};
+use serde::{Deserialize, Serialize};
 
-fn main() {
-    println!("Enter the name of a popular city(new york city, london, paris, tokyo):");
-    let mut city = String::new();
-    io::stdin().read_line(&mut city).expect("Failed to read input.");
+#[derive(Deserialize)]
+struct Request {
+    name: String,
+}
 
-    match city.trim().to_lowercase().as_str() {
-        "new york city" => println!("New York City is the largest city in the United States, with a population of over 8 million people. It is a global center for finance, media, art, and culture."),
-        "london" => println!("London is the capital and largest city of England and the United Kingdom, with a population of over 8 million people. It is a global center for finance, education, healthcare, media, and the arts."),
-        "paris" => println!("Paris is the capital and largest city of France, with a population of over 2 million people. It is known as the City of Light, and is famous for its art, fashion, cuisine, and historic landmarks such as the Eiffel Tower and the Louvre Museum."),
-        "tokyo" => println!("Tokyo is the capital and largest city of Japan, with a population of over 13 million people. It is a global center for finance, technology, entertainment, and fashion."),
-        _ => println!("Sorry, I don't have an introduction for that city."),
-    }
+#[derive(Serialize)]
+struct Response {
+    req_id: String,
+    msg: String,
+}
+
+async fn function_handler(event: LambdaEvent<Request>) -> Result<Response, Error>  {
+    // Extract some useful info from the request
+    let name = event.payload.name;
+    let logic = match name.as_str() {
+        "hello from rust" => "hello from aws lambda!",
+        _ => "huh?",
+    };
+
+    // Prepare the response
+    let resp = Response {
+        req_id: event.context.request_id,
+        msg: format!("{}", logic),
+    };
+
+    // Return `Response` (it will be serialized to JSON automatically by the runtime)
+    Ok(resp)
+}
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        // disable printing the name of the module in every log line.
+        .with_target(false)
+        // disabling time is handy because CloudWatch will add the ingestion time.
+        .without_time()
+        .init();
+
+    run(service_fn(function_handler)).await
 }
